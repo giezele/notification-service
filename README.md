@@ -1,66 +1,62 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+This is Laravel-Based Backend with a set of RESTful endpoints. It uses 2 different messaging services for communication SMS and mail.
+Messaging providers for SMS:
+- [Twilio](https://laravel-notification-channels.com/twilio/#contents)
+- [Vonage](https://www.vonage.com/)  
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Email providers
+- [Postmark](https://postmarkapp.com/)
+- [Symfony Mailer](https://symfony.com/doc/7.0/mailer.html)
 
-## About Laravel
+Failover support is implemented if one of the services goes down.  
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Throttling is set limit amount of notifications (to send up to 300 an hour)  
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Usage tracking is done via database to be able to track which messages were sent, when, and to whom, using a user identifier parameter
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
+- Stable version of [Docker](https://docs.docker.com/engine/install/)
+- Compatible version of [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
 
-## Learning Laravel
+## How To Launch
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### For first time only !
+- `git clone https://github.com/giezele/notification-service.git`
+- `cd notification-service`
+- copy `.env.example` file to `.env` and edit database credentials there
+```
+  DB_DATABASE={your db name}
+  DB_USERNAME={your username}
+  DB_PASSWORD={your password}
+  ```
+- to be able to use all services you must own an account with them and input credentials to `.env` All listed services are free to try, so please register your own test accounts with them.  
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- `docker compose up -d --build`
+- `docker compose exec laravel.test bash`
+- `chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache`
+- `chmod -R 775 /var/www/storage /var/www/bootstrap/cache`
+- `composer setup`
+- `php artisan db:seed`
+- `php artisan queue:work`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### From the second time onwards
+- `docker compose up -d`
+- `docker compose exec php bash`
+- `php artisan queue:work`
 
-## Laravel Sponsors
+***
+### Testing with Postman
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+You can send the same notification via several different channels
 
-### Premium Partners
+##### POST /api/jobs:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
 
-## Contributing
+URL: `http://localhost/api/send-notification`  
+Method: `POST`  
+Body (JSON):
+```
+{
+  "user_id": 1,
+  "message": "This is my test message."
+}
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
