@@ -21,13 +21,10 @@ class NotificationServiceTest extends TestCase
         $failoverProvider = Mockery::mock(\App\Services\VonageSmsProvider::class);
         $failoverProvider->shouldNotReceive('send');
 
-        // Create the service with the mocked providers
         $service = new NotificationService([$primaryProvider], [$failoverProvider]);
 
-        // Execute the send method
         $result = $service->send('1234567890', 'Test message');
 
-        // Assert the notification was sent successfully
         $this->assertTrue($result);
     }
 
@@ -41,10 +38,8 @@ class NotificationServiceTest extends TestCase
         $failoverProvider = Mockery::mock(\App\Services\VonageSmsProvider::class);
         $failoverProvider->shouldReceive('send')->andReturnTrue();
 
-        // Create the service with the mocked providers
         $service = new NotificationService([$primaryProvider], [$failoverProvider]);
 
-        // Execute the send method
         $result = $service->send('1234567890', 'Test message');
 
         // Assert the notification was sent successfully via the failover provider

@@ -30,7 +30,7 @@ class CustomerNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $channels = [ChannelType::MAIL->value, ChannelType::DATABASE->value];
+        $channels = [ChannelType::MAIL->value];
 
         logger($channels);
 
@@ -62,6 +62,8 @@ class CustomerNotification extends Notification implements ShouldQueue
      */
     public function toDatabase(object $notifiable): array
     {
+        logger('toDatabase method triggered');
+
         return [
             'message' => $this->message,
             'user_id' => $this->userId,

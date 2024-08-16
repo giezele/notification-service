@@ -2,27 +2,25 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
 use App\Services\VonageSmsProvider;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Mockery;
 use Tests\TestCase;
 use Vonage\Client as VonageClient;
 use Vonage\SMS\Client as SmsClient;
 use Vonage\SMS\Collection;
-use Vonage\SMS\Message\SMS;
 use Vonage\SMS\SentSMS;
 
 class VonageTest extends TestCase
 {
     use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Force environment to testing
         putenv('APP_ENV=testing');
         $_ENV['APP_ENV'] = 'testing';
         $_SERVER['APP_ENV'] = 'testing';
@@ -46,17 +44,13 @@ class VonageTest extends TestCase
         // Inject the mock client into the VonageSmsProvider
         $provider = new VonageSmsProvider($mockClient);
 
-        // Create a test user
         $user = User::factory()->create(['phone_number' => '1234567890']);
         Log::info("Test User ID: {$user->id}");
 
-        // Execute the send method
         $result = $provider->send($user->phone_number, 'Test message');
 
-        // Assert the SMS was sent successfully
         $this->assertTrue($result);
 
-        // Assert that a notification was logged in the database
         $this->assertDatabaseHas('notifications', [
             'notifiable_id' => $user->id,
             'channel' => 'sms',
@@ -82,23 +76,18 @@ class VonageTest extends TestCase
         // Inject the mock client into the VonageSmsProvider
         $provider = new VonageSmsProvider($mockClient);
 
-        // Create a test user
         $user = User::factory()->create(['phone_number' => '1234567890']);
 
-        // Execute the send method
         $result = $provider->send($user->phone_number, 'Test message');
 
-        // Assert the SMS was not sent successfully
         $this->assertFalse($result);
 
-        // Assert that no notification was logged in the database
         $this->assertDatabaseMissing('notifications', [
             'notifiable_id' => $user->id,
             'channel' => 'sms',
             'data->message' => 'Test message',
         ]);
     }
-
 
     protected function tearDown(): void
     {

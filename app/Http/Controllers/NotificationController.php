@@ -53,5 +53,44 @@ class NotificationController extends Controller
 
         return response()->json(['status' => 'Notification sent successfully']);
     }
+
+
+
+    public function send1(SendNotificationRequest $request): JsonResponse //optimized
+    {
+        try {
+            $user = User::findOrFail($request->input('user_id'));
+            $message = $request->input('message');
+
+            // Send SMS if preferred
+            if ($user->is_sms_preferred) {
+                $this->notificationService->send($user->phone_number, $message);
+                $this->logNotification(
+                    userId: $user->id,
+                    message: $message,
+                    channel: ChannelType::SMS->value,
+                    phoneNumber: $user->phone_number
+                );
+            }
+
+            // Attempt to send email
+            logger('Controller: Attempting to send email');
+            $user->notify(new CustomerNotification($user->id, $message));
+
+            // Log email notification
+            $this->logNotification(
+                userId: $user->id,
+                message: $message,
+                channel: ChannelType::MAIL->value
+            );
+        } catch (Exception $e) {
+            logger('Notification sending failed: ' . $e->getMessage());
+
+            return response()->json(['status' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
+        }
+
+        return response()->json(['status' => 'Notification sent successfully']);
+    }
 }
+
 
