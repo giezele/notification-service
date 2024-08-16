@@ -9,13 +9,12 @@ use App\Models\User;
 use App\Notifications\CustomerNotification;
 use App\Http\Controllers\NotificationController;
 
-//Route::post('/send-notification', [NotificationController::class, 'send'])->middleware('throttle:notifications');
-
 Route::middleware('api')->group(function () {
     Route::post('/send-notification', [NotificationController::class, 'send'])
         ->middleware('throttle:notifications');
 });
 
+//test sending email directly
 Route::post('/send-email', function (Request $request) {
     $request->validate([
         'to' => 'required|email',

@@ -11,7 +11,7 @@ class NotificationServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testSendNotificationWithPrimaryProvider(): void
+    public function test_send_notification_with_primary_provider(): void
     {
         // Mock the primary provider
         $primaryProvider = Mockery::mock(\App\Services\TwilioSmsProvider::class);
@@ -28,7 +28,7 @@ class NotificationServiceTest extends TestCase
         $this->assertTrue($result);
     }
 
-    public function testSendNotificationWithFailoverProvider(): void
+    public function test_send_notification_with_failover_provider(): void
     {
         // Mock the primary provider to fail
         $primaryProvider = Mockery::mock(\App\Services\TwilioSmsProvider::class);

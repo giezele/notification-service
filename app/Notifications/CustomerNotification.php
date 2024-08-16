@@ -14,6 +14,9 @@ class CustomerNotification extends Notification implements ShouldQueue
 {
     use Queueable, LogsNotifications;
 
+    public int $tries = 3;
+
+    public int $backoff = 60;
     /**
      * Create a new notification instance.
      */
@@ -30,11 +33,7 @@ class CustomerNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        $channels = [ChannelType::MAIL->value];
-
-        logger($channels);
-
-        return $channels;
+        return [ChannelType::MAIL->value, ChannelType::DATABASE->value];
     }
 
     /**
@@ -56,10 +55,6 @@ class CustomerNotification extends Notification implements ShouldQueue
         }
     }
 
-    /**
-     * @param object $notifiable
-     * @return array
-     */
     public function toDatabase(object $notifiable): array
     {
         logger('toDatabase method triggered');
@@ -69,5 +64,10 @@ class CustomerNotification extends Notification implements ShouldQueue
             'user_id' => $this->userId,
             'channel' => ChannelType::DATABASE->value,
         ];
+    }
+
+    public function failed(Exception $exception): void
+    {
+        logger('Notification failed after maximum retries: ' . $exception->getMessage());
     }
 }

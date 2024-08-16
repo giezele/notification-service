@@ -9,9 +9,11 @@ Email providers
 
 Failover support is implemented if one of the services goes down.  
 
-Throttling is set limit amount of notifications (to send up to 300 an hour)  
+Throttling is set limit amount of notifications (to send up to 300 an hour).
 
-Usage tracking is done via database to be able to track which messages were sent, when, and to whom, using a user identifier parameter
+Usage tracking is done via database to be able to track which messages were sent, when, and to whom, using a user identifier parameter.
+
+Tests are used to ensure changes can be made without breaking existing logic.
 
 ## Requirements
 - Stable version of [Docker](https://docs.docker.com/engine/install/)
@@ -31,11 +33,10 @@ Usage tracking is done via database to be able to track which messages were sent
 - to be able to use all services you must own an account with them and input credentials to `.env` All listed services are free to try, so please register your own test accounts with them.  
 
 - `docker compose up -d --build`
-- `docker compose exec laravel.test bash`
+- `docker compose exec php bash`
 - `chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache`
 - `chmod -R 775 /var/www/storage /var/www/bootstrap/cache`
 - `composer setup`
-- `php artisan db:seed`
 - `php artisan queue:work`
 
 ### From the second time onwards
