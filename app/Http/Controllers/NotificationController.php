@@ -11,6 +11,7 @@ use App\Traits\LogsNotifications;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use RuntimeException;
 
 class NotificationController extends Controller
 {
@@ -23,73 +24,52 @@ class NotificationController extends Controller
 
     public function send(SendNotificationRequest $request): JsonResponse
     {
+        //todo create a job for sending notification to handle delays, retries
         try {
-            $user = User::findOrFail($request->input('user_id'));
+            $user = $this->findUser($request->input('user_id'));
             $message = $request->input('message');
 
             if ($user->is_sms_preferred) {
-                $this->notificationService->send($user->phone_number, $message);
+                $this->sendSmsNotification($user->phone_number, $message);
             }
 
-            try {
-                logger('Controller: Attempting to send email');
-                $user->notify(new CustomerNotification($user->id, $message));
+            $this->sendEmailNotification($user, $message);
 
-                $this->logNotification(
-                    userId: $user->id,
-                    message: $message,
-                    channel: ChannelType::MAIL->value,
-                );
-            } catch (Exception $e) {
-                logger('Email sending failed: ' . $e->getMessage());
-
-                return response()->json(['status' => 'Failed to send email', 'error' => $e->getMessage()], 500);
-            }
-        } catch (Exception $e) {
-            logger('Exception: ' . $e->getMessage());
-
+            return response()->json(['status' => 'Notification sent successfully']);
+        } catch (ModelNotFoundException $e) {
+            logger('User not found: ' . $e->getMessage());
+            return response()->json(['status' => 'Failed to find user', 'error' => $e->getMessage()], 404);
+        } catch (RuntimeException $e) {
+            logger('Notification error: ' . $e->getMessage());
             return response()->json(['status' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
         }
-
-        return response()->json(['status' => 'Notification sent successfully']);
     }
 
+    private function findUser(string $userId): User
+    {
+        return User::findOrFail($userId);
+    }
 
+    private function sendSmsNotification(string $phoneNumber, string $message): void
+    {
+        $this->notificationService->send($phoneNumber, $message);
+        logger('SMS notification sent to ' . $phoneNumber);
+    }
 
-    public function send1(SendNotificationRequest $request): JsonResponse //optimized
+    private function sendEmailNotification(User $user, string $message): void
     {
         try {
-            $user = User::findOrFail($request->input('user_id'));
-            $message = $request->input('message');
-
-            // Send SMS if preferred
-            if ($user->is_sms_preferred) {
-                $this->notificationService->send($user->phone_number, $message);
-                $this->logNotification(
-                    userId: $user->id,
-                    message: $message,
-                    channel: ChannelType::SMS->value,
-                    phoneNumber: $user->phone_number
-                );
-            }
-
-            // Attempt to send email
             logger('Controller: Attempting to send email');
             $user->notify(new CustomerNotification($user->id, $message));
 
-            // Log email notification
             $this->logNotification(
                 userId: $user->id,
                 message: $message,
-                channel: ChannelType::MAIL->value
+                channel: ChannelType::MAIL->value,
             );
         } catch (Exception $e) {
-            logger('Notification sending failed: ' . $e->getMessage());
-
-            return response()->json(['status' => 'Failed to send notification', 'error' => $e->getMessage()], 500);
+            throw new RuntimeException('Failed to send email: ' . $e->getMessage(), 0, $e);
         }
-
-        return response()->json(['status' => 'Notification sent successfully']);
     }
 }
 
