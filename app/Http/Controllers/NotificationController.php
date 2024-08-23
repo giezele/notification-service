@@ -26,11 +26,11 @@ class NotificationController extends Controller
     {
         //todo create a job for sending notification to handle delays, retries
         try {
-            $user = $this->findUser($request->input('user_id'));
+            $user = User::findOrFail($request->input('user_id'));
             $message = $request->input('message');
 
             if ($user->is_sms_preferred) {
-                $this->sendSmsNotification($user->phone_number, $message);
+                $this->notificationService->send($user->phone_number, $message);
             }
 
             $this->sendEmailNotification($user, $message);
@@ -45,17 +45,7 @@ class NotificationController extends Controller
         }
     }
 
-    private function findUser(string $userId): User
-    {
-        return User::findOrFail($userId);
-    }
-
-    private function sendSmsNotification(string $phoneNumber, string $message): void
-    {
-        $this->notificationService->send($phoneNumber, $message);
-        logger('SMS notification sent to ' . $phoneNumber);
-    }
-
+    //todo move this to service
     private function sendEmailNotification(User $user, string $message): void
     {
         try {
